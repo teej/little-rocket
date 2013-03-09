@@ -20,15 +20,19 @@
 
 #earth {
   position: absolute;
-  bottom: 0;
-  left: 0;
+  bottom: 30px;
+  left: 30px;
 }
 
 #rocket {
   position: absolute;
-  top: 140px;
+  bottom: 100px;
   left: 100px;
-  -webkit-transform: scale(0.2);
+  font-weight: 900;
+}
+
+#rocket img {
+  -webkit-transform: rotate(45deg);
 }
 
 #fuel-meter {

@@ -2,16 +2,33 @@
   
   var Game = function() {
     var self = this;
+    
+    self.scene;
+    self.update_interval;
+    
     self.start = function() {
       
       P = Player();
-      
       self.load_scene(new MissionScene());
+      
+      self.last_update = new Date() / 1.0;
+      if (self.update_interval) clearInterval(self.update_interval);
+      self.update_interval = setInterval(self.update, 1000/30.0);
     }
     
     self.load_scene = function(scene) {
       $('#game').empty();
-      scene.init();
+      self.scene = scene;
+      self.scene.init();
+    }
+    
+    self.update = function() {
+      if (self.scene) {
+        var now = new Date() / 1.0;
+        var dt = now - self.last_update;
+        self.scene.update(dt);
+        self.last_update = now;
+      }
     }
     
     return self;
@@ -67,6 +84,39 @@
     }
     
     
+    return self;
+  }
+  
+  var Rocket = function(opts) {
+    var self = this;
+    self.fuel = opts.fuel;
+    self.power = opts.power;
+    self.distance = 0;
+    self.velocity = 0;
+    
+    self.update = function(dt) {
+      
+      var time_in_seconds = 1000.0 / dt;
+      
+      self.distance += self.velocity * time_in_seconds;
+      self.velocity -= self.power * (dt / 500.0);
+      
+      self.distance = Math.max(self.distance, 0);
+      
+      if (self.distance == 0) {
+        self.velocity = 0;
+      }
+    }
+    
+    self.position = function() {
+      
+      // var curve = bezier(0.55, 0.055, 0.675, 0.19, 0.005);
+      // var distance = self.distance / 350000;
+      // var scale = 100 + (self.distance/1000) * (1 - curve(distance));
+      
+      
+      return (100 + self.distance/1000) + 'px';
+    }
     return self;
   }
   
@@ -156,11 +206,11 @@
       }
       
       $('#store').modal('hide');
-      self.update();
+      // self.update();
       
     }
     
-    self.update = function() {
+    self.update = function(dt) {
       $('#money').text(P.money);
       $('#engine').text(P.engine.name);
     }
@@ -174,19 +224,21 @@
     
     var self = this;
     
-    self.fuel = 3;
+    self.rocket = new Rocket({fuel: 3, power: 500});
     
     self.init = function() {
       
+      $('#game').css('background-image', 'url(mission/background.jpg)');
+      
       $('#game').append('<div id="fuel-meter"></div>')
-      self.update_fuel();
+      // self.update_fuel();
       
       
       var fire_button = $('<button type="button" class="btn btn-danger" id="fire-button">Fire</button>');
       $('#game').append(fire_button);
-      $('#game').append('<img src="earth.png" id="earth">');
+      $('#game').append('<img src="mission/earth.png" id="earth">');
       
-      var rocket = $('<img src="rocket.png" id="rocket">');
+      var rocket = $('<div id="rocket"><img src="mission/rocket.png" > <span id="distance"></span></div>');
       $('#game').append(rocket);
       
       fire_button.bind('click', self.fire);
@@ -196,48 +248,69 @@
     
     self.fire = function() {
       
-      if (self.fuel > 0) {
+      if (self.rocket.fuel > 0) {
         
-        self.fuel -= 1;
+        self.rocket.fuel -= 1;
+        self.rocket.velocity = self.rocket.power;
+        // self.
         
-        $('#rocket').stop().animate({
-          left: '+='+(P.power() * 4)+'px'
-        }, 500, function() {
-          self.fall_back();
-        });
+        // $('#rocket').stop().animate({
+        //   left: '+='+(P.power() * 4)+'px'
+        // }, 500, function() {
+        //   self.fall_back();
+        // });
         
-        self.update_fuel();
+        // self.update_fuel();
       }
       
     }
     
     self.fall_back = function() {
-      if ( ! $('#rocket').is(':animated')) {
-        
-        $('#rocket').animate({
-          left: '100px'
-        }, 500, 'easeInCubic', function() {
-          
-          if(self.fuel == 0) {
-            
-            P.money += 50;
-            G.load_scene(LoadOutScene());
-            
-          }
-          
-        });
-      }
+      // if ( ! $('#rocket').is(':animated')) {
+      //   
+      //   $('#rocket').animate({
+      //     left: '100px'
+      //   }, 500, 'easeInCubic', function() {
+      //     
+      //     if(self.fuel == 0) {
+      //       
+      //       P.money += 50;
+      //       G.load_scene(LoadOutScene());
+      //       
+      //     }
+      //     
+      //   });
+      // }
       
       
     }
     
-    self.update_fuel = function() {
+    
+    self.update = function(dt) {
       $('#fuel-meter').empty();
       
-      for (var i=0; i<self.fuel; i++) {
+      for (var i=0; i<self.rocket.fuel; i++) {
         $('#fuel-meter').append('<div class="fuel-cell"></div>');
       }
       
+      
+      self.rocket.update(dt);
+      
+      $('#distance').text(Math.floor(self.rocket.distance));
+      
+      $('#rocket').css('left', self.rocket.position());
+      $('#rocket').css('bottom', self.rocket.position());
+      
+      // if (Math.floor(Math.random() * 100) == 3) console.log("***", self.rocket);
+      
+      // 0 is 100% => 0
+      // 1 is 15%  => 500,000 meters
+      
+      var scale_curve = bezier(0.95, 0.05, 0.795, 0.035, 0.005); // Quad
+      var distance = self.rocket.distance / 500000;
+      var scale = 0.15 + 0.85 * (1 - scale_curve(distance));
+      
+      $('#earth').css('transform', 'scale('+scale+')');
       
     }
     
