@@ -6,7 +6,7 @@
       
       P = Player();
       
-      self.load_scene(new MissionScene());
+      self.load_scene(new LoadOutScene());
     }
     
     self.load_scene = function(scene) {
@@ -33,12 +33,19 @@
     new Item({cost: 50, name: 'Enigma Blaster',       type: ENGINE_TYPE})
   ];
   
+  var BODY_TYPE = 'rocket_body';
+
+  var BODIES = [
+    new Item({cost: 5,  name: 'Bottle Shell',        type: BODY_TYPE}),
+    new Item({cost: 50, name: 'Enigma Shell',        type: BODY_TYPE}),
+    new Item({cost: 75, name: 'Racing Stripe Shell', type: BODY_TYPE})
+  ];
   
   
   
   var Player = function() {
     var self = this;
-    self.money = 105;
+    self.money = 110;
     
     
     self.buy_item = function(item) {
@@ -50,16 +57,20 @@
       if (item.type == ENGINE_TYPE) {
         self.engine = item;
       }
+      else if(item.type == BODY_TYPE) {
+        self.rocket_body = item;
+      }
     }
     
     // ENGINE
     self.engine;
     self.buy_item(ENGINES[0]);
     self.equip(ENGINES[0]);
-    
-    
-    
-    
+
+    // BODY
+    self.rocket_body;
+    self.buy_item(BODIES[0]);
+    self.equip(BODIES[0]);
     
     
     self.power = function() {
@@ -96,6 +107,18 @@
       });
       loadout.append(engine)
       $('#game').append(loadout);
+
+      // Body
+      var body = $('<div class="rocket-component" data-toggle="modal" href="#store"></div>');
+      body.append('<img src="loadout/body.png" />');
+      body.append('<h1>BODY</h1>');
+      body.append('<h2 id="body">'+P.rocket_body.name+'</h2>');
+      body.bind('click', function() {
+        self.populate_store(BODIES);
+      });
+      loadout.append(body);
+      $('#game').append(loadout);
+
       
       
       
@@ -163,6 +186,7 @@
     self.update = function() {
       $('#money').text(P.money);
       $('#engine').text(P.engine.name);
+      $('#body').text(P.rocket_body.name);
     }
     
     
