@@ -102,6 +102,14 @@
   text-transform: uppercase;
 }
 
+#loadout .rocket-component1 {
+  float: right;
+  width: 400px;
+  height: 100px;
+  text-align: right;
+  font-weight: 900;
+}
+
 #store * {
   color: #000;
 }
