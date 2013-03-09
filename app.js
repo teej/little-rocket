@@ -40,8 +40,6 @@
     var self = this;
     self.money = 105;
     
-    // ENGINE
-    self.engine;
     
     self.buy_item = function(item) {
       self.money -= item.cost;
@@ -54,6 +52,8 @@
       }
     }
     
+    // ENGINE
+    self.engine;
     self.buy_item(ENGINES[0]);
     self.equip(ENGINES[0]);
     
