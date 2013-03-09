@@ -336,6 +336,11 @@
       
       $('#earth').css('transform', 'scale('+scale+')');
       
+      if (self.rocket.distance == 0 && self.rocket.fuel == 0) {
+        P.money += 50;
+        G.load_scene(LoadOutScene());
+      }
+      
     }
     
     
