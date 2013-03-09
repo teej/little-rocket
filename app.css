@@ -1,6 +1,12 @@
+* {
+  color: #fff;
+  font-family: 'Proxima Nova';
+}
+
+
 #game {
-  width: 100%;
-  height: 650px;
+  width: 800px;
+  height: 600px;
   background-color: #eee;
   position: relative;
 }
@@ -38,4 +44,60 @@
   background-color: #f00;
   float: left;
   margin: 5px;
+}
+
+#coin_ui {
+  position: absolute;
+  height: 58px;
+  width: 200px;
+  top: 30px;
+  left: 60px;
+  font-size: 30px;
+  vertical-align: -4px;
+  font-weight: 900;
+  text-align: left;
+}
+
+#blast-off {
+  position: absolute;
+  right:150px;
+  bottom:45px;
+}
+
+#loadout {
+  position: absolute;
+  width: 400px;
+  height: 340px;
+  top: 130px;
+  left: 15px;
+}
+
+#loadout .rocket-component {
+  float: left;
+  width: 400px;
+  height: 100px;
+  text-align: right;
+  font-weight: 900;
+}
+
+#loadout .rocket-component * {
+  float: right;
+  line-height: 1em;
+}
+
+#loadout .rocket-component h1 {
+  width: 285px;
+  font-size: 18px;
+  margin: 15px 15px 0 0;
+}
+
+#loadout .rocket-component h2 {
+  width: 285px;
+  font-size: 24px;
+  margin: 5px 15px 0 0;
+  text-transform: uppercase;
+}
+
+#store * {
+  color: #000;
 }
