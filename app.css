@@ -26,9 +26,11 @@
 
 #rocket {
   position: absolute;
-  bottom: 100px;
-  left: 100px;
+  bottom: 0px;
+  left: 0px;
   font-weight: 900;
+  width:150px;
+  height:150px;
 }
 
 #rocket img {

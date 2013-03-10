@@ -1,4 +1,10 @@
 (function($){
+  var E = 0.0005;
+  var easeInExpo  = bezier(0.95, 0.05, 0.795, 0.035, E);
+  var easeOutExpo = bezier(0.19, 1, 0.22, 1, E);
+  var easeInQuad  = bezier(0.55, 0.085, 0.68, 0.53, E);
+  var easeOutQuad = bezier(0.25, 0.46, 0.45, 0.94, E);
+  
   
   var Game = function() {
     var self = this;
@@ -94,6 +100,17 @@
       return 50;
     }
     
+    self.fuel = function() {
+      return 3;
+    }
+    
+    self.rocket = function() {
+      
+      return new Rocket({
+        fuel: self.fuel(),
+        power: self.power()
+      });
+    }
     
     return self;
   }
@@ -110,7 +127,7 @@
       var time_in_seconds = 1000.0 / dt;
       
       self.distance += self.velocity * time_in_seconds;
-      self.velocity -= self.power * (dt / 500.0);
+      self.velocity -= self.power * (dt / 2000.0);
       
       self.distance = Math.max(self.distance, 0);
       
@@ -119,15 +136,38 @@
       }
     }
     
+    self.bezier_position = function() {
+      return easeOutQuad(self.distance / 500000);
+    }
+    
     self.position = function() {
       
-      // var curve = bezier(0.55, 0.055, 0.675, 0.19, 0.005);
-      // var distance = self.distance / 350000;
-      // var scale = 100 + (self.distance/1000) * (1 - curve(distance));
+      var x =      parseInt(118 + self.bezier_position() * self.distance/1000);
+      var y = -1 * parseInt( 78 + self.bezier_position() * self.distance/1000);
       
-      
-      return (100 + self.distance/1000) + 'px';
+      return 'translate('+x+'px,'+y+'px)';
     }
+    
+    self.scale = function() {
+      var scale = 0.2 + 0.8 * self.bezier_position();
+      return 'scale('+scale+') rotate(45deg)';
+    }
+    
+    self.fire = function() {
+      self.fuel -= 1;
+      self.velocity = Math.max(self.velocity, 0);
+      self.velocity = self.power;
+    }
+    
+    self.distance_text = function() {
+      if (self.distance < 100000) {
+        return Math.floor(self.distance);
+      } else {
+        return (Math.floor(self.distance / 1000) + 'k');
+      }
+    }
+    
+    
     return self;
   }
   
@@ -195,7 +235,7 @@
       var mission_button = $('<img src="loadout/blast-off.png" id="blast-off" />');
       $('#game').append(mission_button);
       mission_button.bind('click', function() {
-        G.load_scene(MissionScene());
+        G.load_scene(new MissionScene());
       });
       
     }
@@ -248,7 +288,7 @@
     
     var self = this;
     
-    self.rocket = new Rocket({fuel: 3, power: 500});
+    self.rocket = P.rocket();
     
     self.init = function() {
       
@@ -273,39 +313,8 @@
     self.fire = function() {
       
       if (self.rocket.fuel > 0) {
-        
-        self.rocket.fuel -= 1;
-        self.rocket.velocity = self.rocket.power;
-        // self.
-        
-        // $('#rocket').stop().animate({
-        //   left: '+='+(P.power() * 4)+'px'
-        // }, 500, function() {
-        //   self.fall_back();
-        // });
-        
-        // self.update_fuel();
+        self.rocket.fire();
       }
-      
-    }
-    
-    self.fall_back = function() {
-      // if ( ! $('#rocket').is(':animated')) {
-      //   
-      //   $('#rocket').animate({
-      //     left: '100px'
-      //   }, 500, 'easeInCubic', function() {
-      //     
-      //     if(self.fuel == 0) {
-      //       
-      //       P.money += 50;
-      //       G.load_scene(LoadOutScene());
-      //       
-      //     }
-      //     
-      //   });
-      // }
-      
       
     }
     
@@ -320,21 +329,25 @@
       
       self.rocket.update(dt);
       
-      $('#distance').text(Math.floor(self.rocket.distance));
+      $('#distance').text(self.rocket.distance_text());
       
-      $('#rocket').css('left', self.rocket.position());
-      $('#rocket').css('bottom', self.rocket.position());
+      $('#rocket img').css({transform: self.rocket.scale()});
+      $('#rocket').css({transform: self.rocket.position()})
       
       // if (Math.floor(Math.random() * 100) == 3) console.log("***", self.rocket);
       
       // 0 is 100% => 0
       // 1 is 15%  => 500,000 meters
       
-      var scale_curve = bezier(0.95, 0.05, 0.795, 0.035, 0.005); // Quad
-      var distance = self.rocket.distance / 500000;
-      var scale = 0.15 + 0.85 * (1 - scale_curve(distance));
+      var bezier_position = easeInQuad(self.rocket.distance / 500000);
+      var scale = 0.15 + 0.85 * (1 - bezier_position);
       
-      $('#earth').css('transform', 'scale('+scale+')');
+      // Scale the earth with anchor point {0,0}
+      $('#earth').css({
+        transform: 'scale('+scale+')',
+        left: (30 - (1-scale) * 233.0/2)+'px',
+        bottom: (30 - (1-scale) * 211.0/2)+'px'
+      });
       
       if (self.rocket.distance == 0 && self.rocket.fuel == 0) {
         P.money += 50;
