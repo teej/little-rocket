@@ -48,8 +48,9 @@
     self.fuel = opts.fuel;
     self.type = opts.type;
     
+    if (opts.drag) self.drag = opts.drag;
     if (opts.fire) self.fire = opts.fire;
-
+    
     self.owned = false;
     return self;
   }
@@ -58,7 +59,7 @@
   
   var ENGINES = [
     new Item({cost:  0, name: 'Bottle Rocket Engine', power: 0, fuel: 0, type: ENGINE_TYPE}),
-    new Item({cost: 25, name: 'Enigma Blaster', power: 50, fuel: 1, fire:'green', type: ENGINE_TYPE}),
+    new Item({cost: 40, name: 'Enigma Blaster', power: 30, fuel: 1, fire:'green', type: ENGINE_TYPE}),
     new Item({cost: 75, name: 'Blue Streaks', power: 10, fuel: 2, type: ENGINE_TYPE}),
     new Item({cost: 125, name: 'Cosmos Engine', power: 75, fuel: 5, type: ENGINE_TYPE})
   ];
@@ -75,15 +76,15 @@
   var ACCESSORY_TYPE = 'accessory';
 
   var ACCESSORIES = [
-    new Item({cost: 25, name: 'Streamers', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
-    new Item({cost: 75, name: 'Balloons', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
-    new Item({cost: 125, name: 'Umbrella', power: 0, fuel: 0, type: ACCESSORY_TYPE})
+    new Item({cost: 25,  name: 'Streamers', drag:15,  type: ACCESSORY_TYPE}),
+    new Item({cost: 75,  name: 'Balloons',  drag:25, type: ACCESSORY_TYPE}),
+    new Item({cost: 125, name: 'Umbrella',  drag:39, type: ACCESSORY_TYPE})
   ]
   
   var Player = function() {
     var self = this;
     self.money = 0;
-    var BASE_POWER = 100;
+    var BASE_POWER = 50;
     var BASE_FUEL = 3;
     
     
@@ -134,8 +135,7 @@
     self.power = function() {
       var power = BASE_POWER
                   + (self.engine       ? self.engine.power      : 0)
-                  + (self.rocket_body  ? self.rocket_body.power : 0)
-                  + (self.accessory    ? self.accessory.power   : 0);
+                  + (self.rocket_body  ? self.rocket_body.power : 0);
       console.log("power: " + power);
       return power;
     }
@@ -143,8 +143,7 @@
     self.fuel = function() {
       var fuel = BASE_FUEL
                   + (self.engine      ? self.engine.fuel      : 0) 
-                  + (self.rocket_body ? self.rocket_body.fuel : 0)
-                  + (self.accessory   ? self.accessory.fuel   : 0);
+                  + (self.rocket_body ? self.rocket_body.fuel : 0);
       console.log("fuel: " + fuel);
       return fuel;
     }
@@ -159,7 +158,9 @@
       return new Rocket({
         fuel: self.fuel(),
         power: self.power(),
-        fire_color: self.fire_color()
+        fire_color: self.fire_color(),
+        drag: ((self.accessory) ? self.accessory.drag : 0),
+        accessory: self.accessory
       });
     }
     
@@ -168,11 +169,16 @@
   
   var Rocket = function(opts) {
     var self = this;
+    self.destroyed = false;
     self.stage = 0;
     self.takeoff_fuel = 50;
     self.fuel = opts.fuel;
     self.power = opts.power;
     self.fire_color = opts.fire_color;
+    self.drag = opts.drag;
+    self.accessory = opts.accessory;
+    self.backdrift = 0;
+    self.acc_deployed = false;
     self.distance = 0;
     self.velocity = 0;
     self.lifetime = 0;
@@ -181,14 +187,32 @@
       
       if (self.stage > 0) {
         self.lifetime += dt;
+        
+        if (self.velocity < 0) {
+          self.backdrift += dt;
+        } else {
+          self.backdrift = 0;
+        }
+
+        if (self.backdrift > 500) {
+          self.acc_deployed = true;
+        }
+        
       }
       
-      var time_in_seconds = 1000.0 / dt;
+      var time_in_seconds = dt;
       
       self.distance += self.velocity * time_in_seconds;
       self.velocity += self.acceleration() * (dt / 1000.0);
-      // self.velocity = Math.max(0, self.velocity) // DECEL CANCEL
+      
+      if (self.velocity <= -200 && !self.destroyed) {
+        self.destroyed = true;
+      }
+      
+      self.velocity = Math.max(-200, self.velocity) // DECEL FLOOR
       self.distance = Math.max(self.distance, 0);
+      
+      
       
       if (self.distance == 0) {
         self.velocity = 0;
@@ -200,11 +224,14 @@
     }
     
     self.acceleration = function() {
-      var a = -0.5 * self.power;
+      
+      var drag_rating = -20;
       if (self.velocity < 0) {
-        a *= 2;
+        drag_rating -= 20;
+        if (self.acc_deployed) drag_rating += self.drag;
       }
-      return a
+      
+      return self.power * (drag_rating / 40)
     }
     
     self.coordinates = function() {
@@ -224,9 +251,11 @@
     }
     
     self.fire = function() {
+      // var drag_effect = (self.acc_deployed ? (40 - self.drag) : 40) / 40 ;
+      
       self.fuel -= 1;
-      self.velocity = Math.max(self.velocity, 0);
-      self.velocity = self.power;
+      self.velocity = Math.min(self.velocity, 0);
+      self.velocity = self.power;// * drag_effect;
     }
     
     self.burn = function() {
@@ -244,7 +273,7 @@
     
     self.fire_display = function() {
       
-      if (self.stage == 0 || self.velocity < 0) {
+      if (self.stage == 0 || self.velocity <= 0) {
         return { display: 'none' };
       } else {
         var scale = 0.85 + 0.15 * Math.abs(1 - Math.floor(self.lifetime % 200) / 100);
@@ -437,7 +466,7 @@
     }
     
     self.set_position = function(x, y) {
-      self.sprite.css('transform', 'translate('+x+'px,'+y+'px) scale('+self.scale+')');
+      self.sprite.css('transform', 'translate('+(x+50)+'px,'+(y-120)+'px) scale('+self.scale+')');
     }
     
     self.sprite = $('<div id="doober">+'+self.amount+'</div>')
@@ -447,10 +476,34 @@
   }
   
   
+  var Explosion = function(p) {
+    var self = this;
+    
+    self.sprite = $('<div class="explosion"></div>')
+    $('#rocket').append(self.sprite);
+    
+    var frame = 0;
+    var interval = setInterval(function() {
+      
+      // console.log("FRAME: ("+(frame % 4)+" | "+Math.floor(frame / 4)+")");
+      
+      self.sprite.css('background-position', (-64 * (frame % 4) ) + 'px ' + (-64 * Math.floor(frame / 4) ) + 'px');
+      frame++;
+      if (frame === 16) {
+        clearInterval(interval);
+        self.sprite.remove();
+      }
+    }, 1000 / 60.0)
+    
+    self.sprite.css({left: '+='+( 20 - Math.random() * 40) + 'px', top: '+='+( 20 - Math.random() * 40) + 'px'})
+    
+  };
+  
   var MissionScene = function() {
     
     var self = this;
     
+    self.ended = false;
     self.rocket = P.rocket();
     self.max_distance = 0;
     self.distance_awards = 0;
@@ -472,8 +525,9 @@
         $('#booster').append('<div class="cell" style="width:'+cell_width+'px; margin-right:'+margin+'px"></div>');
       }
       $('#game').append('<div id="fuel"><div class="fuel-gauge"></div></div>')
-      $('#game').append('<ul id="ui-labels"><li>MAX DISTANCE</li><li>FUEL</li><li>BOOSTER</li></ul>')
-      $('#game').append('<div id="distance"></div>')
+      $('#game').append('<ul id="ui-labels"><li>SPEED</li><li>MAX DISTANCE</li><li>FUEL</li><li>BOOSTER</li></ul>')
+      $('#game').append('<div id="distance" class="ui-data"></div>')
+      $('#game').append('<div id="speed" class="ui-data"></div>')
       
       
       $('#game').append('<div id="coin_ui"> <img src="coin.png" /> <span id="money"></span></div>');
@@ -483,10 +537,22 @@
       space.append('<img src="mission/earth.png" id="earth">');
       
       var rocket = $('<div id="rocket"><img src="mission/rocket.png" class="body" /><img src="mission/fire-'+self.rocket.fire_color+'.png" class="fire" /></div>');
+      if (self.rocket.accessory)
+        rocket.append('<img src="mission/'+self.rocket.accessory.name+'.png" class="accessory" />');
       space.append(rocket);
       
       fire_button.bind('click', self.fire);
       
+      $('#game').append('<img src="mission/warning-glow.png" id="warning-glow" />');
+      $('#game').append('<img src="mission/warning.png" id="warning" />');
+      
+      $('#game').append('<div id="mission-success"></div>');
+      
+      var back_button = $('<div class="button" id="back-to-loadout">Loadout</div>');
+      $('#game').append(back_button);
+      back_button.bind('click', function() {
+        G.load_scene(new LoadOutScene());
+      })
       
     }
     
@@ -526,20 +592,48 @@
     
     self.update = function(dt) {
       
+      // if (self.ended) return;
+      
       $('#money').text(P.money);
       
       // Fuel
-
       $('#fuel .fuel-gauge').css('width', (self.rocket.takeoff_fuel * 100/50.0)+'%');
       
+      // Distance
       self.max_distance = Math.max(self.max_distance, Math.floor(self.rocket.distance));
       $('#distance').text(self.max_distance.number_with_delimiter());
+      
+      // Speed
+      $('#speed').text(self.rocket.velocity.toFixed(1) + " m/s");
+      if (self.rocket.velocity <= -50) {
+        if ( ! $('#speed').hasClass('warning')) $('#speed').addClass('warning')
+      } else {
+        $('#speed').removeClass('warning')
+      }
+      
+      // Warning
+      if (self.rocket.velocity <= -50) {
+        var warning_opacity = (self.rocket.velocity / -200).toFixed(2);
+        $('#warning-glow').css('opacity', warning_opacity);
+        
+        var warning_step = 100 + 900 * (1 - self.rocket.velocity / -200);
+        var step_state = self.rocket.lifetime % (warning_step * 2);
+        // if (step_state < warning_step)
+        $('#warning').css('display', (step_state < warning_step) ? 'none' : 'block');
+      } else {
+        $('#warning-glow').css('opacity', 0);
+        $('#warning').css('display', 'none');
+      }
+      
       
       if (parseInt(self.max_distance / 50000) > self.distance_awards) {
         self.distance_awards += 1;
         var p = self.rocket.coordinates()
         p.y = p.y - 80;
-        self.doobers.push(new Doober(5, p));
+        
+        var amount = 15 * (Math.floor(self.distance_awards / 5) + 1);
+        
+        self.doobers.push(new Doober(15, p));
       }
       
       $.each(self.doobers, function(i, doober) {
@@ -548,8 +642,23 @@
       
       // Rocket
       self.rocket.update(dt);
+      
+      
+
+      
+      
+      if (self.rocket.destroyed) {
+        $('#rocket .body').attr('src', 'mission/rocket-charred.png');
+        if (Math.random() > 0.3) {
+          new Explosion();
+        }
+      }
+      
+      
       $('#rocket').css({transform: self.rocket.position() + ' ' + self.rocket.scale()})
       $('#rocket .fire').css(self.rocket.fire_display());
+      if ( self.rocket.acc_deployed && ! $('#rocket .accessory').hasClass('deployed'))
+        $('#rocket .accessory').addClass('deployed')
       
       // Planet
       var earth_scale;
@@ -577,12 +686,39 @@
       $('#space').css({ transform: 'translate('+x+'px, '+y+'px) scale('+scene_scale+')' });
       
       
-      if (self.rocket.distance == 0 && self.rocket.stage > 1) {
-        G.load_scene(new LoadOutScene());
+      if (self.rocket.distance == 0 && self.rocket.stage > 1 && !self.ended) {
+        self.end(!self.rocket.destroyed)
       }
       
     }
     
+    
+    self.end = function(victory) {
+      
+      self.ended = true;
+      
+      $('#fire-button').hide();
+      
+      if (victory) {
+        $('#mission-success').text('MISSION SUCCESS!!');
+      } else {
+        $('#mission-success').text('MISSION FAILURE').addClass('warning');
+      }
+      
+      $('#back-to-loadout').show();
+      
+      $('#mission-success').attr('scalar', 0).animate({scalar: 1}, {
+        duration:350,
+        step: function(now, fx) {
+          // console.log(fx + ': '+now)
+          var x_scale = 1.0 + 19.0 * (1 - now);
+          var y_scale = 0.1 + 0.9 * (now);
+          $(this).css('transform', 'scale('+x_scale+', '+y_scale+')')
+        }
+      });
+        
+      // G.load_scene(new LoadOutScene());
+    }
     
     return self;
   }
