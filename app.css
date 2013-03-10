@@ -182,6 +182,23 @@
   color: #000;
 }
 
+#store .modal-body ul {
+  list-style-type: none;
+  margin: 0;
+}
+
+#store .modal-body ul li {
+  margin: 0 0 15px 0;
+  padding: 5px;
+  border-radius: 6px;
+  background-color: #eee;
+  cursor: pointer;
+}
+
+#store .modal-body ul li:hover {
+  background-color: rgba(0, 255, 0, 0.2);
+}
+
 .button {
   width:150px;
   height: 50px;

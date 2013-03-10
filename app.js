@@ -105,6 +105,18 @@
       }
     }
     
+    self.unequip = function(item_type) {
+      if (item_type == ENGINE_TYPE) {
+        self.engine = null;
+      }
+      else if(item_type == BODY_TYPE) {
+        self.rocket_body = null;
+      }
+      else if(item_type == ACCESSORY_TYPE) {
+        self.accessory = null;
+      }
+    }
+    
     // ENGINE
     self.engine;
     self.buy_item(ENGINES[0]);
@@ -280,7 +292,7 @@
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button> \
           <h3 id="myModalLabel">STORE</h3> \
         </div> \
-        <div class="modal-body"></div> \
+        <div class="modal-body"><ul></ul></div> \
       </div>')
       
       $('#game').append(store)
@@ -306,17 +318,28 @@
     
     self.populate_store = function(items) {
       
-      $('#store .modal-body').empty();
+      $('#store .modal-body ul').empty();
+      
+      var unequip = $('<li>Unequip</li>');
+      unequip.bind('click', function() {
+        P.unequip(items[0].type);
+        $('#store').modal('hide');
+      });
+      
+      $('#store .modal-body ul').append(unequip)
       
       $.each(items, function(i, item) {
         
-        var store_line_item = $('<div>'+item.name + ", cost: "+item.cost + ", power: " +item.power+ ", fuel: " +item.fuel+ (item.owned ? ' OWNED' : '') + '</div>');
+        var store_line_item = $('<li><b>'+item.name + "</b>"
+                                +", cost: " +item.cost
+                                +", power: " +item.power
+                                +", fuel: " +item.fuel+ (item.owned ? ' OWNED' : '') + '</li>');
         
         store_line_item.bind('click', function() {
           self.buy_or_equip(item);
         })
         
-        $('#store .modal-body').append(store_line_item);
+        $('#store .modal-body ul').append(store_line_item);
       });
       
     }
@@ -325,13 +348,13 @@
       
       if (item.owned) {
         P.equip(item);
+        $('#store').modal('hide');
       } else if (P.money >= item.cost) {
         P.buy_item(item);
         P.equip(item);
+        $('#store').modal('hide');
       }
       
-      $('#store').modal('hide');
-      // self.update();
       
     }
     
