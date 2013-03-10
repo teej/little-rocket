@@ -57,36 +57,33 @@
   var ENGINE_TYPE = 'engine';
   
   var ENGINES = [
-    new Item({cost:  0, name: 'Bottle Rocket',  power: 0,  fuel: 0, type: ENGINE_TYPE}),
-    new Item({cost: 50, name: 'Enigma Blaster', power: 50, fuel: 1, fire:'green', type: ENGINE_TYPE}),
-    new Item({cost: 50, name: 'Blue Streaks',   power: 75, fuel: 5, type: ENGINE_TYPE}),
-    new Item({cost: 50, name: 'Cosmos Engine',  power: 75, fuel: 5, type: ENGINE_TYPE})
+    new Item({cost:  0, name: 'Bottle Rocket Engine', power: 0, fuel: 0, type: ENGINE_TYPE}),
+    new Item({cost: 25, name: 'Enigma Blaster', power: 50, fuel: 1, fire:'green', type: ENGINE_TYPE}),
+    new Item({cost: 75, name: 'Blue Streaks', power: 10, fuel: 2, type: ENGINE_TYPE}),
+    new Item({cost: 125, name: 'Cosmos Engine', power: 75, fuel: 5, type: ENGINE_TYPE})
   ];
   
   var BODY_TYPE = 'rocket_body';
 
   var BODIES = [
     new Item({cost: 0,  name: 'Plastic Tubing', power: 0, fuel: 0, type: BODY_TYPE}),
-    new Item({cost: 50, name: 'Enigma Shell', power: 10, fuel: 1, type: BODY_TYPE}),
+    new Item({cost: 25, name: 'Enigma Shell', power: 10, fuel: 1, type: BODY_TYPE}),
     new Item({cost: 75, name: 'Racing Stripe Shell', power: 25, fuel: 1,  type: BODY_TYPE}),
-    new Item({cost: 75, name: 'Nova Shell', power: 25, fuel: 1,  type: BODY_TYPE})
+    new Item({cost: 125, name: 'Nova Shell', power: 25, fuel: 1,  type: BODY_TYPE})
   ];
   
   var ACCESSORY_TYPE = 'accessory';
 
   var ACCESSORIES = [
-    // new Item({cost: 0,  name: 'nothing', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
-    new Item({cost: 50, name: 'Streamers', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
+    new Item({cost: 25, name: 'Streamers', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
     new Item({cost: 75, name: 'Balloons', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
-    new Item({cost: 75, name: 'Umbrella', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
-    new Item({cost: 75, name: 'Space Diver', power: 0, fuel: 0, type: ACCESSORY_TYPE})
-    
+    new Item({cost: 125, name: 'Umbrella', power: 0, fuel: 0, type: ACCESSORY_TYPE})
   ]
   
   var Player = function() {
     var self = this;
-    self.money = 100;
-    var BASE_POWER = 50;
+    self.money = 0;
+    var BASE_POWER = 100;
     var BASE_FUEL = 3;
     
     
