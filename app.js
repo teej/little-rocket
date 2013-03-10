@@ -166,12 +166,15 @@
       return a
     }
     
-    self.position = function() {
-      
+    self.coordinates = function() {
       var x =      parseInt(118 + self.bezier_position() * self.distance/1000);
       var y = -1 * parseInt( 78 + self.bezier_position() * self.distance/1000);
-      
-      return 'translate('+x+'px,'+y+'px)';
+      return {x:x, y:y}
+    }
+    
+    self.position = function() {
+      var p = self.coordinates();
+      return 'translate('+p.x+'px,'+p.y+'px)';
     }
     
     self.scale = function() {
@@ -326,6 +329,49 @@
     return self;
   }
   
+  var Doober = function(amt, p) {
+    var self = this;
+    self.amount = amt;
+    self.lifetime = 0;
+    self.scale = 0.2;
+    self.paid = false
+    
+    self.update = function(dt) {
+      self.lifetime += dt;
+      if (self.lifetime <= 200) {
+        self.scale = 0.2 + 0.8 * (self.lifetime / 200);
+        self.set_position(p.x, p.y);
+      } else if (self.lifetime <= 1200) {
+        self.scale = 1.0
+        self.set_position(p.x, p.y);
+      } else if (self.lifetime > 1200 && self.lifetime <= 1500) {
+        var fly_time = (self.lifetime - 1200) / 300.0;
+        
+        var x = 120 + (p.x - 120) * (1 - easeOutQuad(fly_time));
+        var y = -525 + (p.y + 525) * (1 - easeInQuad(fly_time));
+        self.set_position(x,y);
+      } else if (self.lifetime <= 1600) {
+        if (!self.paid) {
+          self.paid = true
+          P.money += self.amount;
+        }
+        self.sprite.css('opacity', (1600 - self.lifetime)/100.0);
+      } else {
+        self.sprite.css('opacity', 0);
+        
+      }
+    }
+    
+    self.set_position = function(x, y) {
+      self.sprite.css('transform', 'translate('+x+'px,'+y+'px) scale('+self.scale+')');
+    }
+    
+    self.sprite = $('<div id="doober">+'+self.amount+'</div>')
+    $('#game').append(self.sprite);
+    
+    
+  }
+  
   
   var MissionScene = function() {
     
@@ -333,6 +379,8 @@
     
     self.rocket = P.rocket();
     self.max_distance = 0;
+    self.distance_awards = 0;
+    self.doobers = []
     
     self.init = function() {
       
@@ -404,6 +452,17 @@
       self.max_distance = Math.max(self.max_distance, Math.floor(self.rocket.distance));
       $('#distance').text(self.max_distance.number_with_delimiter());
       
+      if (parseInt(self.max_distance / 50000) > self.distance_awards) {
+        self.distance_awards += 1;
+        var p = self.rocket.coordinates()
+        p.y = p.y - 80;
+        self.doobers.push(new Doober(5, p));
+      }
+      
+      $.each(self.doobers, function(i, doober) {
+        doober.update(dt);
+      });
+      
       // Rocket
       self.rocket.update(dt);
       // $('#distance').text(self.rocket.distance_text());
@@ -420,7 +479,6 @@
       });
       
       if (self.rocket.distance == 0 && self.rocket.fuel == 0) {
-        P.money += 50;
         G.load_scene(LoadOutScene());
       }
       

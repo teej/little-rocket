@@ -80,6 +80,19 @@
   width: 150px;
 }
 
+#doober {
+  position: absolute;
+  bottom:0px;
+  left: 0px;
+  font-size:30px;
+  font-weight: 900;
+  padding-right: 32px;
+  display:inline-block;
+  background: transparent url('coin-mini.png') no-repeat right top;
+  line-height: 1em;
+}
+
+
 #ui-labels {
   margin: 0;
   list-style-type: none;
