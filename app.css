@@ -11,6 +11,12 @@
   position: relative;
 }
 
+#blueprint {
+  position: absolute;
+  right: 80px;
+  bottom: 120px;
+}
+
 #fire-button {
   position: absolute;
   right: 15px;
@@ -60,15 +66,14 @@
 }
 
 .cell {
-  width: 40px;
   height: 20px;
   background-color: #ffc022;
   float: left;
-  margin-right: 15px;
 }
 
-.cell:last-child {
-  margin:0;
+
+.cell.empty {
+  background-color: rgba(0,0,0,0.3);
 }
 
 #distance {
@@ -139,7 +144,12 @@
   width: 400px;
   height: 100px;
   text-align: right;
+  margin-bottom: 15px;
   font-weight: 900;
+}
+
+#loadout .rocket-component.empty h1, #loadout .rocket-component.empty h2 {
+  opacity: 0.5;
 }
 
 #loadout .rocket-component * {

@@ -55,7 +55,7 @@
   var ENGINE_TYPE = 'engine';
   
   var ENGINES = [
-    new Item({cost:  0, name: 'Bottle Rocket Engine', power: 0, fuel: 0, type: ENGINE_TYPE}),
+    new Item({cost:  0, name: 'Bottle Rocket', power: 0, fuel: 0, type: ENGINE_TYPE}),
     new Item({cost: 50, name: 'Enigma Blaster', power: 50, fuel: 1, type: ENGINE_TYPE}),
     new Item({cost: 50, name: 'Blue Streaks', power: 75, fuel: 5, type: ENGINE_TYPE}),
     new Item({cost: 50, name: 'Cosmos Engine', power: 75, fuel: 5, type: ENGINE_TYPE})
@@ -64,7 +64,7 @@
   var BODY_TYPE = 'rocket_body';
 
   var BODIES = [
-    new Item({cost: 0,  name: 'Bottle Shell', power: 0, fuel: 0, type: BODY_TYPE}),
+    new Item({cost: 0,  name: 'Plastic Tubing', power: 0, fuel: 0, type: BODY_TYPE}),
     new Item({cost: 50, name: 'Enigma Shell', power: 10, fuel: 1, type: BODY_TYPE}),
     new Item({cost: 75, name: 'Racing Stripe Shell', power: 25, fuel: 1,  type: BODY_TYPE}),
     new Item({cost: 75, name: 'Nova Shell', power: 25, fuel: 1,  type: BODY_TYPE})
@@ -73,7 +73,7 @@
   var ACCESSORY_TYPE = 'accessory';
 
   var ACCESSORIES = [
-    new Item({cost: 0,  name: 'nothing', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
+    // new Item({cost: 0,  name: 'nothing', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
     new Item({cost: 50, name: 'Streamers', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
     new Item({cost: 75, name: 'Balloons', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
     new Item({cost: 75, name: 'Umbrella', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
@@ -116,20 +116,24 @@
     self.equip(BODIES[0]);
     
     // ACCESSORY
-    self.accessory;
-    self.buy_item(ACCESSORIES[0]);
-    self.equip(ACCESSORIES[0]);
+    self.accessory = null;
 
 
 
     self.power = function() {
-      var power = BASE_POWER+self.engine.power+self.rocket_body.power+self.accessory.power;
+      var power = BASE_POWER
+                  + (self.engine       ? self.engine.power      : 0)
+                  + (self.rocket_body  ? self.rocket_body.power : 0)
+                  + (self.accessory    ? self.accessory.power   : 0);
       console.log("power: " + power);
       return power;
     }
     
     self.fuel = function() {
-      var fuel = BASE_FUEL+self.engine.fuel+self.rocket_body.fuel+self.accessory.fuel;
+      var fuel = BASE_FUEL
+                  + (self.engine      ? self.engine.fuel      : 0) 
+                  + (self.rocket_body ? self.rocket_body.fuel : 0)
+                  + (self.accessory   ? self.accessory.fuel   : 0);
       console.log("fuel: " + fuel);
       return fuel;
     }
@@ -231,15 +235,15 @@
       // COIN UI
       $('#game').append('<div id="coin_ui"> <img src="coin.png" /> <span id="money">'+P.money+'</span></div>');
       
-      
+      $('#game').append('<img src="loadout/blueprint.png" id="blueprint" />');
       
       var loadout = $('<div id="loadout"></div>');
       
       // Engine
-      var engine = $('<div class="rocket-component" data-toggle="modal" href="#store"></div>');
+      var engine = $('<div id="engine" class="rocket-component" data-toggle="modal" href="#store"></div>');
       engine.append('<img src="loadout/engine.png" />');
       engine.append('<h1>ENGINE</h1>');
-      engine.append('<h2 id="engine">'+P.engine.name+'</h2>');
+      engine.append('<h2>'+P.engine.name+'</h2>');
       engine.bind('click', function() {
         self.populate_store(ENGINES);
       });
@@ -247,10 +251,10 @@
       $('#game').append(loadout);
 
       // Body
-      var body = $('<div class="rocket-component" data-toggle="modal" href="#store"></div>');
+      var body = $('<div id="body" class="rocket-component" data-toggle="modal" href="#store"></div>');
       body.append('<img src="loadout/body.png" />');
       body.append('<h1>BODY</h1>');
-      body.append('<h2 id="body">'+P.rocket_body.name+'</h2>');
+      body.append('<h2>'+P.rocket_body.name+'</h2>');
       body.bind('click', function() {
         self.populate_store(BODIES);
       });
@@ -258,10 +262,9 @@
       $('#game').append(loadout);
 
       // Accessory
-      var accessory = $('<div class="rocket-component" data-toggle="modal" href="#store"></div>');
+      var accessory = $('<div id="accessory" class="rocket-component" data-toggle="modal" href="#store"></div>');
       accessory.append('<img src="loadout/accessory.png" />');
-      accessory.append('<h1>ACCESSORY</h1>');
-      accessory.append('<h2 id="accessory">'+P.accessory.name+'</h2>');
+      accessory.append('<h1>ACCESSORY</h1><h2></h2>');
       accessory.bind('click', function() {
         self.populate_store(ACCESSORIES);
       });
@@ -274,7 +277,7 @@
       // STORE
       var store = $('<div id="store" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"> \
         <div class="modal-header"> \
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button> \
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button> \
           <h3 id="myModalLabel">STORE</h3> \
         </div> \
         <div class="modal-body"></div> \
@@ -291,7 +294,7 @@
       
       
       
-      var mission_button = $('<img src="loadout/blast-off.png" id="blast-off" />');
+      var mission_button = $('<div class="button" id="blast-off">BLAST OFF!</div>');
       $('#game').append(mission_button);
       mission_button.bind('click', function() {
         G.load_scene(new MissionScene());
@@ -334,9 +337,19 @@
     
     self.update = function(dt) {
       $('#money').text(P.money);
-      $('#engine').text(P.engine.name);
-      $('#body').text(P.rocket_body.name);
-      $('#accessory').text(P.accessory.name);
+      self.set_item('#engine', P.engine);
+      self.set_item('#body', P.rocket_body);
+      self.set_item('#accessory', P.accessory);
+    }
+    
+    self.set_item = function(id, item) {
+      if (item) {
+        $(id + " h2").text(item.name);
+        $(id).removeClass('empty')
+      } else {
+        $(id + " h2").text("Empty");
+        $(id).addClass('empty');
+      }
     }
     
     
@@ -401,7 +414,13 @@
       $('#game').css('background-image', 'url(mission/background.jpg)');
       
       // Fuel
+      var cell_width =  120 / self.rocket.fuel;
+      var cell_margin =  30 / (self.rocket.fuel - 1)
       $('#game').append('<div id="booster"></div>')
+      for (var i=self.rocket.fuel; i>0; i--) {
+        var margin = (i == 1) ? 0 : cell_margin;
+        $('#booster').append('<div class="cell" style="width:'+cell_width+'px; margin-right:'+margin+'px"></div>');
+      }
       $('#game').append('<div id="fuel"><div class="fuel-gauge"></div></div>')
       $('#game').append('<ul id="ui-labels"><li>MAX DISTANCE</li><li>FUEL</li><li>BOOSTER</li></ul>')
       $('#game').append('<div id="distance"></div>')
@@ -440,7 +459,10 @@
         }, 100)
         
       } else if (self.rocket.fuel > 0) {
+        
         self.rocket.fire();
+        
+        $('#booster .cell').eq(self.rocket.fuel).addClass('empty');
         
         if (self.rocket.fuel == 0) {
           self.rocket.stage += 1;
@@ -457,10 +479,7 @@
       $('#money').text(P.money);
       
       // Fuel
-      $('#booster').empty();
-      for (var i=0; i<self.rocket.fuel; i++) {
-        $('#booster').append('<div class="cell"></div>');
-      }
+
       $('#fuel .fuel-gauge').css('width', (self.rocket.takeoff_fuel * 100/50.0)+'%');
       
       self.max_distance = Math.max(self.max_distance, Math.floor(self.rocket.distance));
@@ -492,7 +511,7 @@
         bottom: (30 - (1-scale) * 211.0/2)+'px'
       });
       
-      if (self.rocket.distance == 0 && self.rocket.fuel == 0) {
+      if (self.rocket.distance == 0 && self.rocket.stage > 1) {
         G.load_scene(LoadOutScene());
       }
       
