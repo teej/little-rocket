@@ -44,7 +44,10 @@
     var self = this;
     self.cost = opts.cost
     self.name = opts.name;
+    self.power = opts.power;
+    self.fuel = opts.fuel;
     self.type = opts.type;
+
     self.owned = false;
     return self;
   }
@@ -52,32 +55,37 @@
   var ENGINE_TYPE = 'engine';
   
   var ENGINES = [
-    new Item({cost:  0, name: 'Bottle Rocket Engine', type: ENGINE_TYPE}),
-    new Item({cost: 50, name: 'Enigma Blaster',       type: ENGINE_TYPE})
+    new Item({cost:  0, name: 'Bottle Rocket Engine', power: 0, fuel: 0, type: ENGINE_TYPE}),
+    new Item({cost: 50, name: 'Enigma Blaster', power: 50, fuel: 1, type: ENGINE_TYPE}),
+    new Item({cost: 50, name: 'Blue Streaks', power: 75, fuel: 5, type: ENGINE_TYPE}),
+    new Item({cost: 50, name: 'Cosmos Engine', power: 75, fuel: 5, type: ENGINE_TYPE})
   ];
   
   var BODY_TYPE = 'rocket_body';
 
   var BODIES = [
-    new Item({cost: 0,  name: 'Bottle Shell',        type: BODY_TYPE}),
-    new Item({cost: 50, name: 'Enigma Shell',        type: BODY_TYPE}),
-    new Item({cost: 75, name: 'Racing Stripe Shell', type: BODY_TYPE})
+    new Item({cost: 0,  name: 'Bottle Shell', power: 0, fuel: 0, type: BODY_TYPE}),
+    new Item({cost: 50, name: 'Enigma Shell', power: 10, fuel: 1, type: BODY_TYPE}),
+    new Item({cost: 75, name: 'Racing Stripe Shell', power: 25, fuel: 1,  type: BODY_TYPE}),
+    new Item({cost: 75, name: 'Nova Shell', power: 25, fuel: 1,  type: BODY_TYPE})
   ];
   
   var ACCESSORY_TYPE = 'accessory';
 
   var ACCESSORIES = [
-    new Item({cost: 0,  name: 'nothing',    type: ACCESSORY_TYPE}),
-    new Item({cost: 50, name: 'Streamers',  type: ACCESSORY_TYPE}),
-    new Item({cost: 75, name: 'Balloons',   type: ACCESSORY_TYPE}),
-    new Item({cost: 75, name: 'Umbrella',   type: ACCESSORY_TYPE})
+    new Item({cost: 0,  name: 'nothing', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
+    new Item({cost: 50, name: 'Streamers', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
+    new Item({cost: 75, name: 'Balloons', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
+    new Item({cost: 75, name: 'Umbrella', power: 0, fuel: 0, type: ACCESSORY_TYPE}),
+    new Item({cost: 75, name: 'Space Diver', power: 0, fuel: 0, type: ACCESSORY_TYPE})
     
   ]
-  
   
   var Player = function() {
     var self = this;
     self.money = 100;
+    var BASE_POWER = 25;
+    var BASE_FUEL = 3;
     
     
     self.buy_item = function(item) {
@@ -112,12 +120,18 @@
     self.buy_item(ACCESSORIES[0]);
     self.equip(ACCESSORIES[0]);
 
+
+
     self.power = function() {
-      return 75;
+      var power = BASE_POWER+self.engine.power+self.rocket_body.power+self.accessory.power;
+      console.log("power: " + power);
+      return power;
     }
     
     self.fuel = function() {
-      return 3;
+      var fuel = BASE_FUEL+self.engine.fuel+self.rocket_body.fuel+self.accessory.fuel;
+      console.log("fuel: " + fuel);
+      return fuel;
     }
     
     self.rocket = function() {
@@ -281,7 +295,7 @@
       
       $.each(items, function(i, item) {
         
-        var store_line_item = $('<div>'+item.name + ", cost: "+item.cost + (item.owned ? ' OWNED' : '') + '</div>');
+        var store_line_item = $('<div>'+item.name + ", cost: "+item.cost + ", power: " +item.power+ ", fuel: " +item.fuel+ (item.owned ? ' OWNED' : '') + '</div>');
         
         store_line_item.bind('click', function() {
           self.buy_or_equip(item);
