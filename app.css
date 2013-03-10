@@ -9,6 +9,20 @@
   height: 600px;
   background-color: #eee;
   position: relative;
+  overflow: hidden;
+}
+
+#space {
+  width: 1600px;
+  height: 1200px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  max-width: none;
+}
+
+#space .background {
+  position: absolute;
 }
 
 #blueprint {
@@ -36,11 +50,21 @@
   left: 0px;
   font-weight: 900;
   width:150px;
-  height:150px;
+  height:300px;
 }
 
-#rocket img {
-  -webkit-transform: rotate(45deg);
+#rocket * {
+  position: absolute;
+}
+
+#rocket .body {
+  z-index: 2;
+}
+
+#rocket .fire {
+  left: 6px;
+  top: 95px;
+  z-index: 1;
 }
 
 #fuel {

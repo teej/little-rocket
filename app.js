@@ -47,6 +47,8 @@
     self.power = opts.power;
     self.fuel = opts.fuel;
     self.type = opts.type;
+    
+    if (opts.fire) self.fire = opts.fire;
 
     self.owned = false;
     return self;
@@ -55,10 +57,10 @@
   var ENGINE_TYPE = 'engine';
   
   var ENGINES = [
-    new Item({cost:  0, name: 'Bottle Rocket', power: 0, fuel: 0, type: ENGINE_TYPE}),
-    new Item({cost: 50, name: 'Enigma Blaster', power: 50, fuel: 1, type: ENGINE_TYPE}),
-    new Item({cost: 50, name: 'Blue Streaks', power: 75, fuel: 5, type: ENGINE_TYPE}),
-    new Item({cost: 50, name: 'Cosmos Engine', power: 75, fuel: 5, type: ENGINE_TYPE})
+    new Item({cost:  0, name: 'Bottle Rocket',  power: 0,  fuel: 0, type: ENGINE_TYPE}),
+    new Item({cost: 50, name: 'Enigma Blaster', power: 50, fuel: 1, fire:'green', type: ENGINE_TYPE}),
+    new Item({cost: 50, name: 'Blue Streaks',   power: 75, fuel: 5, type: ENGINE_TYPE}),
+    new Item({cost: 50, name: 'Cosmos Engine',  power: 75, fuel: 5, type: ENGINE_TYPE})
   ];
   
   var BODY_TYPE = 'rocket_body';
@@ -84,7 +86,7 @@
   var Player = function() {
     var self = this;
     self.money = 100;
-    var BASE_POWER = 25;
+    var BASE_POWER = 50;
     var BASE_FUEL = 3;
     
     
@@ -150,11 +152,17 @@
       return fuel;
     }
     
+    self.fire_color = function() {
+      if (self.engine && self.engine.fire) return self.engine.fire;
+      return 'yellow';
+    }
+    
     self.rocket = function() {
       
       return new Rocket({
         fuel: self.fuel(),
-        power: self.power()
+        power: self.power(),
+        fire_color: self.fire_color()
       });
     }
     
@@ -167,16 +175,22 @@
     self.takeoff_fuel = 50;
     self.fuel = opts.fuel;
     self.power = opts.power;
+    self.fire_color = opts.fire_color;
     self.distance = 0;
     self.velocity = 0;
+    self.lifetime = 0;
     
     self.update = function(dt) {
+      
+      if (self.stage > 0) {
+        self.lifetime += dt;
+      }
       
       var time_in_seconds = 1000.0 / dt;
       
       self.distance += self.velocity * time_in_seconds;
       self.velocity += self.acceleration() * (dt / 1000.0);
-      
+      // self.velocity = Math.max(0, self.velocity) // DECEL CANCEL
       self.distance = Math.max(self.distance, 0);
       
       if (self.distance == 0) {
@@ -197,8 +211,8 @@
     }
     
     self.coordinates = function() {
-      var x =      parseInt(118 + self.bezier_position() * self.distance/1000);
-      var y = -1 * parseInt( 78 + self.bezier_position() * self.distance/1000);
+      var x =      parseInt(65 + self.bezier_position() * self.distance/1200);
+      var y = -1 * parseInt( 5 + self.bezier_position() * self.distance/1200);
       return {x:x, y:y}
     }
     
@@ -231,6 +245,18 @@
       }
     }
     
+    self.fire_display = function() {
+      
+      if (self.stage == 0 || self.velocity < 0) {
+        return { display: 'none' };
+      } else {
+        var scale = 0.85 + 0.15 * Math.abs(1 - Math.floor(self.lifetime % 200) / 100);
+        scale *= (self.power / 100);
+        return { display: 'block', transform: 'scale('+scale+')', 'transform-origin':'50% 0%' };
+      }
+      
+      
+    }
     
     return self;
   }
@@ -243,6 +269,7 @@
     self.init = function() {
       
       $('#game').css('background-image', 'url(loadout/background.jpg)');
+      
       
       // COIN UI
       $('#game').append('<div id="coin_ui"> <img src="coin.png" /> <span id="money">'+P.money+'</span></div>');
@@ -417,7 +444,7 @@
     }
     
     self.sprite = $('<div id="doober">+'+self.amount+'</div>')
-    $('#game').append(self.sprite);
+    $('#space').append(self.sprite);
     
     
   }
@@ -434,7 +461,10 @@
     
     self.init = function() {
       
-      $('#game').css('background-image', 'url(mission/background.jpg)');
+      // $('#game').css('background-image', 'url(mission/background.jpg)');
+      
+      var space = $('<div id="space"><img src="mission/space.jpg" class="background" /></div>');
+      $('#game').append(space);
       
       // Fuel
       var cell_width =  120 / self.rocket.fuel;
@@ -453,10 +483,10 @@
       
       var fire_button = $('<div class="button" id="fire-button">Launch!</div>')
       $('#game').append(fire_button);
-      $('#game').append('<img src="mission/earth.png" id="earth">');
+      space.append('<img src="mission/earth.png" id="earth">');
       
-      var rocket = $('<div id="rocket"><img src="mission/rocket.png" > </div>');
-      $('#game').append(rocket);
+      var rocket = $('<div id="rocket"><img src="mission/rocket.png" class="body" /><img src="mission/fire-'+self.rocket.fire_color+'.png" class="fire" /></div>');
+      space.append(rocket);
       
       fire_button.bind('click', self.fire);
       
@@ -521,21 +551,37 @@
       
       // Rocket
       self.rocket.update(dt);
-      // $('#distance').text(self.rocket.distance_text());
-      $('#rocket img').css({transform: self.rocket.scale()});
-      $('#rocket').css({transform: self.rocket.position()})
+      $('#rocket').css({transform: self.rocket.position() + ' ' + self.rocket.scale()})
+      $('#rocket .fire').css(self.rocket.fire_display());
       
       // Planet
-      var bezier_position = easeInQuad(self.rocket.distance / 500000);
-      var scale = 0.15 + 0.85 * (1 - bezier_position);
+      var earth_scale;
+      if (self.rocket.distance < 500000) {
+        var bezier_position = easeInQuad(self.rocket.distance / 350000);
+        var bezier_position = self.rocket.distance / 500000
+        earth_scale = 0.30 + 0.7 * (1 - bezier_position);
+      } else {
+        earth_scale = 0.3
+      }
       $('#earth').css({
-        transform: 'scale('+scale+')',
-        left: (30 - (1-scale) * 233.0/2)+'px',
-        bottom: (30 - (1-scale) * 211.0/2)+'px'
+        transform: 'scale('+earth_scale+')',
+        left: (30 - (1-earth_scale) * 233.0/2)+'px',
+        bottom: (30 - (1-earth_scale) * 211.0/2)+'px'
       });
       
+      
+      // Scene
+      // var scene_transform;
+      // if (self.rocket.distance > 50000) {
+        
+        var scene_scale =  0.5 + 0.5 * (1 - self.rocket.distance / 1000000)
+        var x = Math.floor(-1600 * (1 - scene_scale) / 2);
+        var y = Math.floor( 1200 * (1 - scene_scale) / 2);
+      $('#space').css({ transform: 'translate('+x+'px, '+y+'px) scale('+scene_scale+')' });
+      
+      
       if (self.rocket.distance == 0 && self.rocket.stage > 1) {
-        G.load_scene(LoadOutScene());
+        G.load_scene(new LoadOutScene());
       }
       
     }
