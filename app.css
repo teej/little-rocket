@@ -13,8 +13,8 @@
 
 #fire-button {
   position: absolute;
-  left: 1000px;
-  bottom: 50px;
+  right: 15px;
+  bottom: 15px;
   z-index: 2;
 }
 
@@ -37,19 +37,62 @@
   -webkit-transform: rotate(45deg);
 }
 
-#fuel-meter {
+#fuel {
   position: absolute;
-  top: 50px;
-  left: 50px;
+  bottom: 115px;
+  right: 15px;
+  width:150px;
+  height:20px;
+  background:rgba(0,0,0,0.3);
   z-index: 3;
 }
 
-.fuel-cell {
-  width: 10px;
-  height: 40px;
-  background-color: #f00;
+.fuel-gauge {
+  height:20px;
+  background-color: red;
+}
+
+#booster {
+  position: absolute;
+  bottom: 80px;
+  right: 15px;
+  z-index: 3;
+}
+
+.cell {
+  width: 40px;
+  height: 20px;
+  background-color: #ffc022;
   float: left;
-  margin: 5px;
+  margin-right: 15px;
+}
+
+.cell:last-child {
+  margin:0;
+}
+
+#distance {
+  font-weight: 900;
+  font-size: 18px;
+  position: absolute;
+  right: 15px;
+  bottom: 150px;
+  width: 150px;
+}
+
+#ui-labels {
+  margin: 0;
+  list-style-type: none;
+  font-size: 18px;
+  font-weight: 100;
+  text-align: right;
+  position: absolute;
+  bottom: 80px;
+  right: 180px;
+}
+
+#ui-labels li {
+  margin-top: 15px;
 }
 
 #coin_ui {
@@ -114,4 +157,17 @@
 
 #store * {
   color: #000;
+}
+
+.button {
+  width:150px;
+  height: 50px;
+  color: white;
+  font-weight: 900;
+  text-align: center;
+  background-image: url(button.png);
+  cursor: pointer;
+  font-size: 24px;
+  text-transform: uppercase;
+  line-height: 2.2em;
 }

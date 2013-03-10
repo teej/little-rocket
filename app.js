@@ -133,6 +133,8 @@
   
   var Rocket = function(opts) {
     var self = this;
+    self.stage = 0;
+    self.takeoff_fuel = 50;
     self.fuel = opts.fuel;
     self.power = opts.power;
     self.distance = 0;
@@ -143,13 +145,7 @@
       var time_in_seconds = 1000.0 / dt;
       
       self.distance += self.velocity * time_in_seconds;
-      
-      var acceleration = -1 * self.power * (dt / 2000.0);
-      if (self.velocity < 0) {
-        acceleration *= 2;
-      }
-        
-      self.velocity += acceleration;
+      self.velocity += self.acceleration() * (dt / 1000.0);
       
       self.distance = Math.max(self.distance, 0);
       
@@ -160,6 +156,14 @@
     
     self.bezier_position = function() {
       return easeOutQuad(self.distance / 500000);
+    }
+    
+    self.acceleration = function() {
+      var a = -0.5 * self.power;
+      if (self.velocity < 0) {
+        a *= 2;
+      }
+      return a
     }
     
     self.position = function() {
@@ -179,6 +183,11 @@
       self.fuel -= 1;
       self.velocity = Math.max(self.velocity, 0);
       self.velocity = self.power;
+    }
+    
+    self.burn = function() {
+      self.takeoff_fuel -= 1;
+      self.velocity = self.power * 0.30;
     }
     
     self.distance_text = function() {
@@ -323,20 +332,26 @@
     var self = this;
     
     self.rocket = P.rocket();
+    self.max_distance = 0;
     
     self.init = function() {
       
       $('#game').css('background-image', 'url(mission/background.jpg)');
       
-      $('#game').append('<div id="fuel-meter"></div>')
-      // self.update_fuel();
+      // Fuel
+      $('#game').append('<div id="booster"></div>')
+      $('#game').append('<div id="fuel"><div class="fuel-gauge"></div></div>')
+      $('#game').append('<ul id="ui-labels"><li>MAX DISTANCE</li><li>FUEL</li><li>BOOSTER</li></ul>')
+      $('#game').append('<div id="distance"></div>')
       
       
-      var fire_button = $('<button type="button" class="btn btn-danger" id="fire-button">Fire</button>');
+      $('#game').append('<div id="coin_ui"> <img src="coin.png" /> <span id="money"></span></div>');
+      
+      var fire_button = $('<div class="button" id="fire-button">Launch!</div>')
       $('#game').append(fire_button);
       $('#game').append('<img src="mission/earth.png" id="earth">');
       
-      var rocket = $('<div id="rocket"><img src="mission/rocket.png" > <span id="distance"></span></div>');
+      var rocket = $('<div id="rocket"><img src="mission/rocket.png" > </div>');
       $('#game').append(rocket);
       
       fire_button.bind('click', self.fire);
@@ -346,37 +361,58 @@
     
     self.fire = function() {
       
-      if (self.rocket.fuel > 0) {
+      
+      if (self.rocket.stage == 0) {
+        $('#fire-button').hide();
+        self.rocket.stage += 1;
+        
+        // var ticks = self.rocket.takeoff_fuel;
+        var interval = setInterval(function() {
+          self.rocket.burn();
+          // ticks -= 1;
+          if (self.rocket.takeoff_fuel == 0){
+            clearInterval(interval);
+            self.rocket.stage += 1;
+            $('#fire-button').show().text('Boost!');
+          }
+        }, 100)
+        
+      } else if (self.rocket.fuel > 0) {
         self.rocket.fire();
+        
+        if (self.rocket.fuel == 0) {
+          self.rocket.stage += 1;
+          $('#fire-button').hide();
+        }
+        
       }
       
     }
     
     
     self.update = function(dt) {
-      $('#fuel-meter').empty();
       
+      $('#money').text(P.money);
+      
+      // Fuel
+      $('#booster').empty();
       for (var i=0; i<self.rocket.fuel; i++) {
-        $('#fuel-meter').append('<div class="fuel-cell"></div>');
+        $('#booster').append('<div class="cell"></div>');
       }
+      $('#fuel .fuel-gauge').css('width', (self.rocket.takeoff_fuel * 100/50.0)+'%');
       
+      self.max_distance = Math.max(self.max_distance, Math.floor(self.rocket.distance));
+      $('#distance').text(self.max_distance.number_with_delimiter());
       
+      // Rocket
       self.rocket.update(dt);
-      
-      $('#distance').text(self.rocket.distance_text());
-      
+      // $('#distance').text(self.rocket.distance_text());
       $('#rocket img').css({transform: self.rocket.scale()});
       $('#rocket').css({transform: self.rocket.position()})
       
-      // if (Math.floor(Math.random() * 100) == 3) console.log("***", self.rocket);
-      
-      // 0 is 100% => 0
-      // 1 is 15%  => 500,000 meters
-      
+      // Planet
       var bezier_position = easeInQuad(self.rocket.distance / 500000);
       var scale = 0.15 + 0.85 * (1 - bezier_position);
-      
-      // Scale the earth with anchor point {0,0}
       $('#earth').css({
         transform: 'scale('+scale+')',
         left: (30 - (1-scale) * 233.0/2)+'px',
@@ -400,3 +436,13 @@
   var G = Game();
   G.start();
 })(jQuery);
+
+Number.prototype.number_with_delimiter = function(delimiter) {
+    var number = this + '', delimiter = delimiter || ',';
+    var split = number.split('.');
+    split[0] = split[0].replace(
+        /(\d)(?=(\d\d\d)+(?!\d))/g,
+        '$1' + delimiter
+    );
+    return split.join('.');    
+};
