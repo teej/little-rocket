@@ -52,23 +52,32 @@
   var ENGINE_TYPE = 'engine';
   
   var ENGINES = [
-    new Item({cost:  5, name: 'Bottle Rocket Engine', type: ENGINE_TYPE}),
+    new Item({cost:  0, name: 'Bottle Rocket Engine', type: ENGINE_TYPE}),
     new Item({cost: 50, name: 'Enigma Blaster',       type: ENGINE_TYPE})
   ];
   
   var BODY_TYPE = 'rocket_body';
 
   var BODIES = [
-    new Item({cost: 5,  name: 'Bottle Shell',        type: BODY_TYPE}),
+    new Item({cost: 0,  name: 'Bottle Shell',        type: BODY_TYPE}),
     new Item({cost: 50, name: 'Enigma Shell',        type: BODY_TYPE}),
     new Item({cost: 75, name: 'Racing Stripe Shell', type: BODY_TYPE})
   ];
   
+  var ACCESSORY_TYPE = 'accessory';
+
+  var ACCESSORIES = [
+    new Item({cost: 0,  name: 'nothing',    type: ACCESSORY_TYPE}),
+    new Item({cost: 50, name: 'Streamers',  type: ACCESSORY_TYPE}),
+    new Item({cost: 75, name: 'Balloons',   type: ACCESSORY_TYPE}),
+    new Item({cost: 75, name: 'Umbrella',   type: ACCESSORY_TYPE})
+    
+  ]
   
   
   var Player = function() {
     var self = this;
-    self.money = 110;
+    self.money = 100;
     
     
     self.buy_item = function(item) {
@@ -83,6 +92,9 @@
       else if(item.type == BODY_TYPE) {
         self.rocket_body = item;
       }
+      else if(item.type == ACCESSORY_TYPE) {
+        self.accessory = item;
+      }
     }
     
     // ENGINE
@@ -95,7 +107,11 @@
     self.buy_item(BODIES[0]);
     self.equip(BODIES[0]);
     
-    
+    // ACCESSORY
+    self.accessory;
+    self.buy_item(ACCESSORIES[0]);
+    self.equip(ACCESSORIES[0]);
+
     self.power = function() {
       return 50;
     }
@@ -209,6 +225,17 @@
       loadout.append(body);
       $('#game').append(loadout);
 
+      // Accessory
+      var accessory = $('<div class="rocket-component" data-toggle="modal" href="#store"></div>');
+      accessory.append('<img src="loadout/accessory.png" />');
+      accessory.append('<h1>ACCESSORY</h1>');
+      accessory.append('<h2 id="accessory">'+P.accessory.name+'</h2>');
+      accessory.bind('click', function() {
+        self.populate_store(ACCESSORIES);
+      });
+      loadout.append(accessory);
+      $('#game').append(loadout);
+
       
       
       
@@ -277,6 +304,7 @@
       $('#money').text(P.money);
       $('#engine').text(P.engine.name);
       $('#body').text(P.rocket_body.name);
+      $('#accessory').text(P.accessory.name);
     }
     
     
