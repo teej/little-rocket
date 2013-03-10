@@ -113,7 +113,7 @@
     self.equip(ACCESSORIES[0]);
 
     self.power = function() {
-      return 50;
+      return 75;
     }
     
     self.fuel = function() {
@@ -143,7 +143,13 @@
       var time_in_seconds = 1000.0 / dt;
       
       self.distance += self.velocity * time_in_seconds;
-      self.velocity -= self.power * (dt / 2000.0);
+      
+      var acceleration = -1 * self.power * (dt / 2000.0);
+      if (self.velocity < 0) {
+        acceleration *= 2;
+      }
+        
+      self.velocity += acceleration;
       
       self.distance = Math.max(self.distance, 0);
       
