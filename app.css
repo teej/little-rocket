@@ -263,6 +263,10 @@
   font-weight: 900;
 }
 
+#store {
+
+}
+
 #store * {
   color: #000;
 }
@@ -273,15 +277,31 @@
 }
 
 #store .modal-body ul li {
-  margin: 0 0 15px 0;
-  padding: 5px;
+  margin:10px;
+  float: left;
+  width: 90px;
+  height: 120px;
+/*  margin: 0 0 15px 0;*/
+  padding: 10px;
   border-radius: 6px;
   background-color: #eee;
+/*  border: 5px solid #eee;*/
+  opacity: 0.5;
   cursor: pointer;
 }
 
+#store .modal-body ul li.owned {
+/*  border: 5px solid #ffc022;*/
+  opacity: 1.0;
+}
+
+#store .modal-body ul li.equipped {
+/*  background-color: #ffc022;*/
+}
+
 #store .modal-body ul li:hover {
-  background-color: rgba(0, 255, 0, 0.2);
+/*  background-color: rgba(0, 255, 0, 0.2);*/
+  opacity: 1.0;
 }
 
 .button {
@@ -295,4 +315,27 @@
   font-size: 24px;
   text-transform: uppercase;
   line-height: 2.2em;
+}
+
+#rocket-name {
+  position: absolute;
+  font-weight: 900;
+  top: 40px;
+  right: 95px;
+  line-height: 1em;
+  text-align: center;
+  width: 260px;
+  font-size: 30px;
+}
+
+#rocket-power {
+  position: absolute;
+  font-weight: 600;
+  top: 70px;
+  font-size: 18px;
+  right: 95px;
+  line-height: 1em;
+  text-align: center;
+  width: 260px;
+  color: #ffc022;
 }

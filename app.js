@@ -58,19 +58,17 @@
   var ENGINE_TYPE = 'engine';
   
   var ENGINES = [
-    new Item({cost:  0, name: 'Bottle Rocket Engine', power: 0, fuel: 0, type: ENGINE_TYPE}),
+    new Item({cost:  0, name: 'Bottle Rocket', power: 0, fuel: 0, type: ENGINE_TYPE}),
     new Item({cost: 40, name: 'Enigma Blaster', power: 30, fuel: 1, fire:'green', type: ENGINE_TYPE}),
-    new Item({cost: 75, name: 'Blue Streaks', power: 10, fuel: 2, type: ENGINE_TYPE}),
-    new Item({cost: 125, name: 'Cosmos Engine', power: 75, fuel: 5, type: ENGINE_TYPE})
+    new Item({cost: 100, name: 'Cosmos Engine', power: 60, fuel: 3, fire:'purple', type: ENGINE_TYPE})
   ];
   
   var BODY_TYPE = 'rocket_body';
 
   var BODIES = [
     new Item({cost: 0,  name: 'Plastic Tubing', power: 0, fuel: 0, type: BODY_TYPE}),
-    new Item({cost: 25, name: 'Enigma Shell', power: 10, fuel: 1, type: BODY_TYPE}),
-    new Item({cost: 75, name: 'Racing Stripe Shell', power: 25, fuel: 1,  type: BODY_TYPE}),
-    new Item({cost: 125, name: 'Nova Shell', power: 25, fuel: 1,  type: BODY_TYPE})
+    new Item({cost: 10, name: 'Enigma Shell', power: 10, fuel: 1, type: BODY_TYPE}),
+    new Item({cost: 25, name: 'Nova Shell', power: 50, fuel: 1,  type: BODY_TYPE})
   ];
   
   var ACCESSORY_TYPE = 'accessory';
@@ -296,6 +294,8 @@
       
       $('#game').css('background-image', 'url(loadout/background.jpg)');
       
+      $('#game').append('<div id="rocket-name">JAM RAWKIT</div>')
+      $('#game').append('<div id="rocket-power"></div>')
       
       // COIN UI
       $('#game').append('<div id="coin_ui"> <img src="coin.png" /> <span id="money">'+P.money+'</span></div>');
@@ -308,7 +308,7 @@
       var engine = $('<div id="engine" class="rocket-component" data-toggle="modal" href="#store"></div>');
       engine.append('<img src="loadout/engine.png" />');
       engine.append('<h1>ENGINE</h1>');
-      engine.append('<h2>'+P.engine.name+'</h2>');
+      engine.append('<h2></h2>');
       engine.bind('click', function() {
         self.populate_store(ENGINES);
       });
@@ -319,7 +319,7 @@
       var body = $('<div id="body" class="rocket-component" data-toggle="modal" href="#store"></div>');
       body.append('<img src="loadout/body.png" />');
       body.append('<h1>BODY</h1>');
-      body.append('<h2>'+P.rocket_body.name+'</h2>');
+      body.append('<h2></h2>');
       body.bind('click', function() {
         self.populate_store(BODIES);
       });
@@ -383,10 +383,16 @@
       
       $.each(items, function(i, item) {
         
-        var store_line_item = $('<li><b>'+item.name + "</b>"
-                                +", cost: " +item.cost
-                                +", power: " +item.power
-                                +", fuel: " +item.fuel+ (item.owned ? ' OWNED' : '') + '</li>');
+        var store_line_item = $('<li><b>'+item.name + "</b><br/>"
+                                +(item.cost ? "cost: " +item.cost+'<br/>' : '')
+                                +(item.power ?"power: " +item.power+'<br/>' : '')
+                                +(item.fuel ? "boost: +" +item.fuel : '')
+                                + '</li>');
+        
+        if (item.owned) {
+          store_line_item.addClass('owned')
+        }
+
         
         store_line_item.bind('click', function() {
           self.buy_or_equip(item);
@@ -412,6 +418,7 @@
     }
     
     self.update = function(dt) {
+      $('#rocket-power').text('Power: '+P.power());
       $('#money').text(P.money);
       self.set_item('#engine', P.engine);
       self.set_item('#body', P.rocket_body);
@@ -513,7 +520,7 @@
       
       // $('#game').css('background-image', 'url(mission/background.jpg)');
       
-      var space = $('<div id="space"><img src="mission/space.jpg" class="background" /></div>');
+      var space = $('<div id="space"><img src="mission/space.jpg?1" class="background" /></div>');
       $('#game').append(space);
       
       // Fuel
@@ -631,9 +638,9 @@
         var p = self.rocket.coordinates()
         p.y = p.y - 80;
         
-        var amount = 15 * (Math.floor(self.distance_awards / 5) + 1);
+        var amount = 15 * (Math.floor(self.distance_awards / 4) + 1);
         
-        self.doobers.push(new Doober(15, p));
+        self.doobers.push(new Doober(amount, p));
       }
       
       $.each(self.doobers, function(i, doober) {
@@ -703,6 +710,17 @@
         $('#mission-success').text('MISSION SUCCESS!!');
       } else {
         $('#mission-success').text('MISSION FAILURE').addClass('warning');
+        
+        $.each([P.engine, P.rocket_body, P.accessory], function(i, item) {
+          if (item) {
+            item.owned = false;
+            P.unequip(item.type);
+          }
+        });
+        
+        
+        
+        
       }
       
       $('#back-to-loadout').show();
